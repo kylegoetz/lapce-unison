@@ -1,19 +1,16 @@
-author = "panekj"
-description = "C/C++ for Lapce: powered by clangd"
-display-name = "C/C++ (clangd)"
-name = "lapce-cpp-clangd"
+author = "kylegoetz"
+description = "Unison for Lapce: powered by ucm"
+display-name = "Unison (ucm)"
+name = "lapce-unison-ucm"
 version = "1.0.0"
-wasm = "bin/lapce-cpp-clangd.wasm"
+wasm = "bin/lapce-unison-ucm.wasm"
 
 [activation]
-language = ["c", "cpp"]
+language = ["unison"] # or "u"?
 workspace-contains = [
-  "*/*.c",
-  "*/*.h",
-  "*/*.cpp",
-  "*/*.hpp",
+  "*/*.u",
 ]
 
 [config."volt.serverPath"]
 default = ""
-description = "Path to clangd"
+description = "Path to ucm"

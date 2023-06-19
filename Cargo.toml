@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "lapce-cpp-clangd"
+name = "lapce-unison-ucm"
 version = "1.0.0"
 resolver = "2"
 

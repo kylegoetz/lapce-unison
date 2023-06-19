@@ -130,17 +130,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lapce-cpp-clangd"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "lapce-plugin",
- "serde",
- "serde_json",
- "zip",
-]
-
-[[package]]
 name = "lapce-plugin"
 version = "0.1.0"
 source = "git+https://github.com/lapce/lapce-plugin-rust.git#768bb44edf5ca3d777a5ba13ec8d2de10b80cdae"
@@ -155,6 +144,17 @@ dependencies = [
  "serde",
  "serde_json",
  "wasi-experimental-http",
+]
+
+[[package]]
+name = "lapce-unison-ucm"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "lapce-plugin",
+ "serde",
+ "serde_json",
+ "zip",
 ]
 
 [[package]]

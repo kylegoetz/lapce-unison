@@ -1,6 +1,6 @@
 use std::{
-  fs::{self, File},
-  io::{self, Read, Write},
+  fs::{self, /*File*/},
+  io::{/*self,*/ Read, Write},
   path::PathBuf,
 };
 
@@ -12,10 +12,10 @@ use lapce_plugin::{
     },
     Request,
   },
-  register_plugin, Http, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
+  register_plugin, /*Http,*/ LapcePlugin, VoltEnvironment, PLUGIN_RPC,
 };
 use serde_json::Value;
-use zip::ZipArchive;
+// use zip::ZipArchive;
 
 #[derive(Default)]
 struct State {}
@@ -37,22 +37,18 @@ macro_rules! ok {
   };
 }
 
-const CLANGD_VERSION: &str = "15.0.1";
+const UCM_VERSION: &str = "release/M4i";
 
 fn initialize(params: InitializeParams) -> Result<()> {
   let document_selector: DocumentSelector = vec![
     DocumentFilter {
-      language: Some(string!("cpp")),
-      pattern: Some(string!("**/*.{H,hh,hpp,h++,C,cc,cpp,c++}")),
-      scheme: None,
-    },
-    DocumentFilter {
-      language: Some(string!("c")),
-      pattern: Some(string!("**/*.{h,c}")),
+      language: Some(string!("Unison")),
+      pattern: Some(string!("**/*.{u}")),
       scheme: None,
     },
   ];
-  let mut clangd_version = string!(CLANGD_VERSION);
+  let mut ucm_version = string!(UCM_VERSION);
+  // let mut clangd_version = string!(CLANGD_VERSION);
   let mut server_args = vec![];
 
   if let Some(options) = params.initialization_options.as_ref() {
@@ -80,18 +76,26 @@ fn initialize(params: InitializeParams) -> Result<()> {
           }
         }
       }
-      if let Some(clangd_ver) = options.get("clangdVersion") {
-        if let Some(clangd_ver) = clangd_ver.as_str() {
-          let clangd_ver = clangd_ver.trim();
-          if !clangd_ver.is_empty() {
-            clangd_version = string!(clangd_ver)
+      if let Some(ucm_version_val) = options.get("ucmVersion") {
+        if let Some(ucm_version_str) = ucm_version_val.as_str() {
+          let trimmed_ucm_version = ucm_version_str.trim();
+          if !trimmed_ucm_version.is_empty() {
+            ucm_version = string!(trimmed_ucm_version);
           }
         }
       }
+      // if let Some(ucm_version) = options.get("ucmVersion") {
+      //   if let Some(ucm_version) = ucm_version.as_str() {
+      //     let ucm_version = ucm_version.trim();
+      //     if !ucm_version.is_empty() {
+      //       ucm_version = string!(ucm_version)
+      //     }
+      //   }
+      // }
     }
   }
 
-  PLUGIN_RPC.stderr(&format!("clangd: {clangd_version}"));
+  PLUGIN_RPC.stderr(&format!("ucm: {ucm_version}"));
 
   let _ = match VoltEnvironment::architecture().as_deref() {
     | Ok("x86_64") => "x86_64",
@@ -103,11 +107,11 @@ fn initialize(params: InitializeParams) -> Result<()> {
     .create(true)
     .write(true)
     .read(true)
-    .open(".clangd_ver"));
+    .open(".ucm_ver"));
   let mut buf = String::new();
   ok!(last_ver.read_to_string(&mut buf));
 
-  let mut server_path = PathBuf::from(format!("clangd_{clangd_version}"));
+  let mut server_path = PathBuf::from(format!("ucm_{ucm_version}"));
   server_path = server_path.join("bin");
 
   // if buf.trim().is_empty() || buf.trim() != clangd_version {
@@ -115,57 +119,58 @@ fn initialize(params: InitializeParams) -> Result<()> {
   //   ok!(fs::remove_dir_all(&server_path));
   // }
 
-  let zip_file = match VoltEnvironment::operating_system().as_deref() {
-    | Ok("macos") => PathBuf::from(format!("clangd-mac-{clangd_version}.zip")),
-    | Ok("linux") => PathBuf::from(format!("clangd-linux-{clangd_version}.zip")),
-    | Ok("windows") => PathBuf::from(format!("clangd-windows-{clangd_version}.zip")),
-    | Ok(v) => return Err(anyhow!("Unsupported OS: {}", v)),
-    | Err(e) => return Err(anyhow!("Error OS: {}", e)),
-  };
+  // let zip_file = match VoltEnvironment::operating_system().as_deref() {
+  //   | Ok("macos") => PathBuf::from(format!("clangd-mac-{ucm_version}.zip")),
+  //   | Ok("linux") => PathBuf::from(format!("clangd-linux-{ucm_version}.zip")),
+  //   | Ok("windows") => PathBuf::from(format!("clangd-windows-{ucm_version}.zip")),
+  //   | Ok(v) => return Err(anyhow!("Unsupported OS: {}", v)),
+  //   | Err(e) => return Err(anyhow!("Error OS: {}", e)),
+  // };
 
-  let download_url = format!(
-    "https://github.com/clangd/clangd/releases/download/{clangd_version}/{}",
-    zip_file.display()
-  );
+  // let download_url = format!(
+  //   "https://github.com/clangd/clangd/releases/download/{clangd_version}/{}",
+  //   zip_file.display()
+  // );
 
-  let mut resp = ok!(Http::get(&download_url));
-  PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
-  let body = ok!(resp.body_read_all());
-  ok!(fs::write(&zip_file, body));
+  // let mut resp = ok!(Http::get(&download_url));
+  // PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
+  // let body = ok!(resp.body_read_all());
+  // ok!(fs::write(&zip_file, body));
 
-  let mut zip = ok!(ZipArchive::new(ok!(File::open(&zip_file))));
+  // let mut zip = ok!(ZipArchive::new(ok!(File::open(&zip_file))));
 
-  for i in 0..zip.len() {
-    let mut file = ok!(zip.by_index(i));
-    let outpath = match file.enclosed_name() {
-      | Some(path) => path.to_owned(),
-      | None => continue,
-    };
+  // for i in 0..zip.len() {
+  //   let mut file = ok!(zip.by_index(i));
+  //   let outpath = match file.enclosed_name() {
+  //     | Some(path) => path.to_owned(),
+  //     | None => continue,
+  //   };
 
-    if (*file.name()).ends_with('/') {
-      ok!(fs::create_dir_all(&outpath));
-    } else {
-      if let Some(p) = outpath.parent() {
-        if !p.exists() {
-          ok!(fs::create_dir_all(&p));
-        }
-      }
-      let mut outfile = ok!(File::create(&outpath));
-      ok!(io::copy(&mut file, &mut outfile));
-    }
+  //   if (*file.name()).ends_with('/') {
+  //     ok!(fs::create_dir_all(&outpath));
+  //   } else {
+  //     if let Some(p) = outpath.parent() {
+  //       if !p.exists() {
+  //         ok!(fs::create_dir_all(&p));
+  //       }
+  //     }
+  //     let mut outfile = ok!(File::create(&outpath));
+  //     ok!(io::copy(&mut file, &mut outfile));
+  //   }
 
-    ok!(fs::remove_file(&zip_file));
-  }
+  //   ok!(fs::remove_file(&zip_file));
+  // }
   // }
 
-  ok!(last_ver.write_all(clangd_version.as_bytes()));
+  ok!(last_ver.write_all(ucm_version.as_bytes()));
 
   match VoltEnvironment::operating_system().as_deref() {
     | Ok("windows") => {
-      server_path = server_path.join("clangd.exe");
+      server_path = server_path.join("ucm.exe");
     }
     | _ => {
-      server_path = server_path.join("clangd");
+      // server_path = server_path.join("ucm");
+      server_path = PathBuf::from("/opt/homebrew/bin/ucm".to_string());
     }
   };
 
